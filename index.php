@@ -18,23 +18,22 @@ body{
     margin:0;
 }
 
-/* ===== BANNER FULL (ĐÃ FIX) ===== */
+/* ===== BANNER ===== */
 .banner{
     position:relative;
-    width:100vw; /* 🔥 full màn hình */
+    width:100vw;
     height:450px;
     background:url('uploads/banner.jpg') no-repeat center;
     background-size:cover;
 
     left:50%;
-    transform:translateX(-50%); /* 🔥 kéo ra khỏi container */
+    transform:translateX(-50%);
 
     display:flex;
     align-items:center;
     justify-content:center;
 }
 
-/* lớp phủ tối */
 .banner::after{
     content:"";
     position:absolute;
@@ -44,7 +43,6 @@ body{
     z-index:1;
 }
 
-/* nội dung */
 .banner-content{
     position:relative;
     z-index:2;
@@ -52,45 +50,31 @@ body{
     color:white;
 }
 
-.banner h1{
-    font-size:42px;
-    margin-bottom:10px;
-}
+.banner h1{font-size:42px;}
+.banner p{font-size:18px;}
 
-.banner p{
-    margin-bottom:20px;
-    font-size:18px;
-}
-
-/* nút */
 .banner button{
     padding:12px 30px;
-    font-size:16px;
     background:#28a745;
     border:none;
     color:white;
     border-radius:8px;
     cursor:pointer;
-    transition:0.3s;
 }
 
-.banner button:hover{
-    background:#218838;
-}
-
-/* ===== SẢN PHẨM ===== */
+/* ===== SẢN PHẨM (GIỐNG PRODUCTS) ===== */
 .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+    display:flex;
+    flex-wrap:wrap;
     gap:20px;
-    padding:20px;
 }
 
 .product{
-    background:white;
-    border-radius:12px;
-    box-shadow:0 0 10px #ccc;
+    width:calc(25% - 20px);
+    background:#fff;
+    border-radius:10px;
     overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
     transition:0.3s;
 }
 
@@ -100,35 +84,49 @@ body{
 
 .product img{
     width:100%;
-    height:200px;
+    height:180px;
     object-fit:cover;
 }
 
 .product-body{
     padding:10px;
+    text-align:center;
+}
+
+.rating{
+    color:orange;
+    font-size:14px;
 }
 
 .price{
     color:red;
+    font-size:18px;
     font-weight:bold;
+    margin:5px 0;
 }
 
 .btn-group{
     display:flex;
     gap:10px;
-    margin-top:10px;
 }
 
 button{
     flex:1;
     padding:8px;
     border:none;
-    border-radius:5px;
     cursor:pointer;
+    border-radius:5px;
 }
 
-.add{background:green;color:white;}
-.buy{background:#006400;color:white;}
+.add{
+    background:green;
+    color:white;
+}
+
+.buy{
+    background:red;
+    color:white;
+}
 </style>
 
 <!-- ===== BANNER ===== -->
@@ -150,51 +148,44 @@ button{
 
 <?php while($row = $result->fetch_assoc()) { ?>
 
-    <div class="product" onclick="goDetail(<?php echo $row['id']; ?>)">
+    <div class="product" onclick="goDetail(<?= $row['id'] ?>)">
 
-        <img src="uploads/<?php echo $row['image']; ?>">
+        <img src="uploads/<?= $row['image'] ?>">
 
         <div class="product-body">
-            <h3><?php echo $row['name']; ?></h3>
+            <h3><?= $row['name'] ?></h3>
 
-            <!-- sao -->
             <?php
-$avg = isset($row['avg_rating']) ? round($row['avg_rating'], 1) : 0;
-$total = isset($row['total_reviews']) ? $row['total_reviews'] : 0;
-?>
+            $avg = round($row['avg_rating'],1);
+            $total = $row['total_reviews'];
+            $full = floor($avg);
+            ?>
 
-<div class="rating">
-<?php
-$avg = round($row['avg_rating'],1);
-$total = $row['total_reviews'];
+            <div class="rating">
+                <?php
+                for($i=1;$i<=5;$i++){
+                    echo ($i <= $full) ? "⭐" : "☆";
+                }
+                ?>
+                <span style="color:#666;">(<?= $total ?>)</span>
+            </div>
 
-$full = floor($avg);
-
-for($i=1;$i<=5;$i++){
-    echo ($i <= $full) ? "⭐" : "☆";
-}
-?>
- <span style="color:#666;">
- (<?= $total ?>)
- </span>
-</div>
-
-            <!-- giá -->
             <p class="price">
-                <?php echo number_format($row['price'], 0, ',', '.'); ?>đ
+                <?= number_format($row['price'], 0, ',', '.') ?>đ
             </p>
 
-            <!-- nút -->
             <div class="btn-group">
+
                 <button class="add"
-                    onclick="event.stopPropagation(); window.location='add_to_cart.php?id=<?php echo $row['id']; ?>'">
+                    onclick="event.stopPropagation(); location.href='add_to_cart.php?id=<?= $row['id'] ?>'">
                     Thêm giỏ
                 </button>
 
                 <button class="buy"
-                    onclick="event.stopPropagation(); window.location='buy.php?id=<?php echo $row['id']; ?>'">
+                    onclick="event.stopPropagation(); location.href='buy.php?id=<?= $row['id'] ?>'">
                     Mua ngay
                 </button>
+
             </div>
         </div>
     </div>
@@ -202,5 +193,11 @@ for($i=1;$i<=5;$i++){
 <?php } ?>
 
 </div>
+
+<script>
+function goDetail(id){
+    window.location.href = "detail.php?id=" + id;
+}
+</script>
 
 <?php include "footer.php"; ?>

@@ -22,7 +22,7 @@ $product_count = $conn->query("SELECT COUNT(*) as total FROM products")->fetch_a
 $user_count = $conn->query("SELECT COUNT(*) as total FROM users")->fetch_assoc();
 $order_count = $conn->query("SELECT COUNT(*) as total FROM orders")->fetch_assoc();
 
-/* DOANH THU CHỈ COMPLETED */
+/* DOANH THU */
 $revenue = $conn->query("
     SELECT SUM(total_price) as total 
     FROM orders 
@@ -81,19 +81,17 @@ img{border-radius:5px}
     <a href="admin.php?tab=orders">📦 Đơn hàng</a>
     <a href="products_admin.php">📦 Sản phẩm</a>
     <a href="logout.php">🚪 Đăng xuất</a>
-    <a href="index.php">🚪 Trang Chủ</a>
+    <a href="index.php">🏠 Trang Chủ</a>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
 
-<!-- ================= DASHBOARD ================= -->
+<!-- DASHBOARD -->
 <?php if($tab == 'dashboard'){ ?>
 
 <h2>Dashboard</h2>
 
 <div class="box">
-
     <div class="card">
         <h3>Sản phẩm</h3>
         <h1><?= $product_count['total'] ?></h1>
@@ -113,12 +111,11 @@ img{border-radius:5px}
         <h3>Doanh thu</h3>
         <h1><?= number_format($revenue['total'] ?? 0) ?>đ</h1>
     </div>
-
 </div>
 
 <?php } ?>
 
-<!-- ================= USER ================= -->
+<!-- USERS -->
 <?php if($tab == 'users'){ ?>
 
 <h2>Danh sách User</h2>
@@ -138,11 +135,25 @@ $users = $conn->query("SELECT * FROM users ORDER BY id DESC");
 while($u = $users->fetch_assoc()) { ?>
 <tr>
     <td><?= $u['id'] ?></td>
+
     <td>
-        <?php if($u['avatar']) { ?>
-            <img src="uploads/<?= $u['avatar'] ?>" width="40">
-        <?php } ?>
+    <?php
+    if($u['role'] == 'admin'){
+        echo "⚙️";
+    } else {
+        $avatar = 'uploads/default.jpg';
+        if(!empty($u['avatar'])){
+            if(file_exists($u['avatar'])){
+                $avatar = $u['avatar'];
+            } elseif(file_exists("uploads/".$u['avatar'])){
+                $avatar = "uploads/".$u['avatar'];
+            }
+        }
+        echo "<img src='$avatar' width='40' height='40' style='border-radius:50%'>";
+    }
+    ?>
     </td>
+
     <td><?= $u['username'] ?></td>
     <td><?= $u['email'] ?></td>
     <td><?= $u['password'] ?></td>
@@ -154,16 +165,15 @@ while($u = $users->fetch_assoc()) { ?>
 
 <?php } ?>
 
-<!-- ================= ORDERS ================= -->
+<!-- ORDERS -->
 <?php if($tab == 'orders'){ ?>
 
 <h2>Quản lý đơn hàng</h2>
 
-<!-- NÚT XÓA TẤT CẢ -->
 <a href="delete_order.php?all=1"
    onclick="return confirm('Xóa tất cả đơn hàng?')"
    style="background:red;color:white;padding:8px 12px;text-decoration:none;border-radius:5px;">
-   🗑 Xóa tất cả đơn
+   🗑 Xóa tất cả
 </a>
 
 <table>
@@ -188,37 +198,64 @@ while($o = $orders->fetch_assoc()) { ?>
     <td><?= $o['id'] ?></td>
     <td><?= $o['username'] ?></td>
     <td><?= number_format($o['total_price']) ?>đ</td>
-   <td>
-<?php
-if($o['status'] == 'shipping'){
-    echo "<span style='color:orange'>Đang giao</span>";
-}
-elseif($o['status'] == 'delivered'){
-    echo "<span style='color:blue'>Chờ nhận hàng</span>";
-}
-elseif($o['status'] == 'completed'){
-    echo "<span style='color:green'>Thanh toán thành công</span>";
-}
-else{
-    echo "<span>Chờ xử lý</span>";
-}
-?>
-</td>
 
+    <!-- STATUS -->
+    <td>
+    <?php
+    switch($o['status']){
+        case 'pending': echo "<span style='color:gray'>Chờ xử lý</span>"; break;
+        case 'processing': echo "<span style='color:orange'>Đang xử lý</span>"; break;
+        case 'shipping': echo "<span style='color:blue'>Đang giao</span>"; break;
+        case 'delivered': echo "<span>Chờ nhận</span>"; break;
+        case 'completed': echo "<span style='color:green'>Hoàn thành</span>"; break;
+        case 'cancelled': echo "<span style='color:red;font-weight:bold'>❌ Đã hủy</span>"; break;
+        default: echo "Không xác định";
+    }
+    ?>
+    </td>
+
+    <!-- ACTION -->
     <td>
 
-        <a href="update_order.php?id=<?= $o['id'] ?>&status=shipping">🚚Đang Giao</a>
-        <a href="update_order.php?id=<?= $o['id'] ?>&status=delivered">📦Chuyển Bị Nhận Hàng</a>
-        <a href="update_order.php?id=<?= $o['id'] ?>&status=completed">💰 Thanh Toán Thành Công</a>
+    <?php if($o['status']=='cancelled'){ ?>
 
-        <!-- XÓA 1 ĐƠN -->
-        <a href="delete_order.php?id=<?= $o['id'] ?>"
-           onclick="return confirm('Xóa đơn này?')"
-           style="color:red;">🗑 xóa</a>
+        <span style="color:red;font-weight:bold;">❌ Đơn đã bị hủy</span>
+
+    <?php } elseif($o['status']=='completed'){ ?>
+
+        <span style="color:green;">✔ Hoàn thành</span>
+
+    <?php } else { ?>
+
+        <?php if($o['status']=='pending'){ ?>
+            <a href="update_order.php?id=<?= $o['id'] ?>&status=processing">⚙️ Xử lý</a>
+        <?php } ?>
+
+        <?php if($o['status']=='processing'){ ?>
+            <a href="update_order.php?id=<?= $o['id'] ?>&status=shipping">🚚 Giao</a>
+        <?php } ?>
+
+        <?php if($o['status']=='shipping'){ ?>
+            <a href="update_order.php?id=<?= $o['id'] ?>&status=delivered">📦 Nhận</a>
+        <?php } ?>
+
+        <?php if($o['status']=='delivered'){ ?>
+            <a href="update_order.php?id=<?= $o['id'] ?>&status=completed">💰 Hoàn thành</a>
+        <?php } ?>
+
+    <?php } ?>
+
+    <br><br>
+
+    <a href="delete_order.php?id=<?= $o['id'] ?>"
+       onclick="return confirm('Xóa đơn này?')"
+       style="color:red;">🗑 xóa</a>
 
     </td>
+
 </tr>
 <?php } ?>
+
 </table>
 
 <?php } ?>

@@ -3,31 +3,43 @@ session_start();
 include 'config.php';
 
 $id = $_SESSION['user_id'];
+
 $username = $_POST['username'];
+$email = $_POST['email'];
+$password = $_POST['password'];
+$confirm = $_POST['confirm_password'];
 
-// 1. update username
-$conn->query("UPDATE users SET username='$username' WHERE id=$id");
-
-// 2. update password (nếu có nhập)
-if(!empty($_POST['password'])){
-    $password = $_POST['password'];
-    $conn->query("UPDATE users SET password='$password' WHERE id=$id");
+// check password
+if(!empty($password)){
+    if($password != $confirm){
+        echo "<script>alert('Mật khẩu không khớp');history.back();</script>";
+        exit();
+    }
 }
 
-// 3. upload avatar
+// avatar
+$avatar_sql = "";
 if(!empty($_FILES['avatar']['name'])){
-
-    $file = "uploads/" . $_FILES['avatar']['name'];
+    $file = "uploads/" . time() . "_" . $_FILES['avatar']['name'];
     move_uploaded_file($_FILES['avatar']['tmp_name'], $file);
-
-    $conn->query("UPDATE users SET avatar='$file' WHERE id=$id");
+    $avatar_sql = ", avatar='$file'";
 }
 
-// update session lại tên
-$_SESSION['username'] = $username;
+// password
+$pass_sql = "";
+if(!empty($password)){
+    $password = password_hash($password, PASSWORD_DEFAULT);
+    $pass_sql = ", password='$password'";
+}
 
-echo "<script>
-alert('Cập nhật thành công!');
-window.location.href='profile.php';
-</script>";
-?>
+// update
+$conn->query("
+    UPDATE users 
+    SET username='$username',
+        email='$email'
+        $pass_sql
+        $avatar_sql
+    WHERE id=$id
+");
+
+echo "<script>alert('Cập nhật thành công');location='profile.php';</script>";

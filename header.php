@@ -1,3 +1,33 @@
+<?php
+if(session_status() === PHP_SESSION_NONE){
+    session_start();
+}
+include 'config.php';
+
+// mặc định
+$avatar = 'uploads/default.jpg';
+$username = 'User';
+$role = 'user';
+
+if(isset($_SESSION['user_id'])){
+    $id = $_SESSION['user_id'];
+
+    $u = $conn->query("SELECT username, avatar, role FROM users WHERE id=$id")->fetch_assoc();
+
+    if($u){
+        $username = $u['username'];
+        $role = $u['role'];
+
+        if(!empty($u['avatar'])){
+            $avatar = $u['avatar'];
+        }
+
+        // cập nhật session luôn
+        $_SESSION['user'] = $username;
+        $_SESSION['role'] = $role;
+    }
+}
+?>
 
 <!DOCTYPE html>
 <html>
@@ -5,149 +35,148 @@
     <title>Tay Nguyen Coffee</title>
 
     <style>
-        body {
-            margin: 0;
-            font-family: Arial;
-            background: #f5f5f5;
+        body{margin:0;font-family:Arial;background:#f5f5f5;}
+
+        .header{
+            background:#6f4e37;
+            color:#fff;
+            padding:15px 0;
+            position:relative;
+            z-index:1000;
         }
 
-        /* HEADER */
-        .header {
-            background: #6f4e37;
-            color: white;
-            padding: 15px 0;
+        .container{
+            width:1100px;
+            margin:auto;
         }
 
-        .container {
-            width: 1100px;
-            margin: auto;
+        .nav{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
         }
 
-        .nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .menu{
+            flex:1;
+            text-align:center;
         }
 
-        .menu {
-            text-align: center;
-            flex: 1;
+        .menu a{
+            margin:0 15px;
+            color:#fff;
+            text-decoration:none;
+            font-weight:bold;
         }
 
-        .menu a {
-            margin: 0 15px;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
+        .right{
+            display:flex;
+            align-items:center;
+            gap:15px;
         }
 
-        .right a {
-            margin-left: 15px;
-            color: white;
-            text-decoration: none;
+        .cart-icon{
+            font-size:20px;
+            color:#fff;
+            text-decoration:none;
         }
 
-        /* BANNER */
-        .banner {
-            height: 300px;
-            background: url('banner.jpg') center/cover no-repeat;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* AVATAR */
+        .nav-avatar{
+            width:32px;
+            height:32px;
+            border-radius:50%;
+            object-fit:cover;
+            border:2px solid #fff;
         }
 
-        .banner button {
-            padding: 12px 25px;
-            background: gold;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
+        /* DROPDOWN */
+        .user-dropdown{
+            position:relative;
         }
 
-        /* PRODUCT */
-        .grid {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 20px;
+        .user-toggle{
+            display:flex;
+            align-items:center;
+            gap:6px;
+            cursor:pointer;
+            color:#fff;
         }
 
-        .product {
-            width: 23%;
-            margin: 1%;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .dropdown-menu{
+            position:absolute;
+            right:0;
+            top:45px;
+            background:#fff;
+            min-width:180px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.2);
+            border-radius:8px;
+            overflow:hidden;
+
+            opacity:0;
+            transform:translateY(10px);
+            transition:0.2s;
+            pointer-events:none;
         }
 
-        .product img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
+        .dropdown-menu.show{
+            opacity:1;
+            transform:translateY(0);
+            pointer-events:auto;
         }
 
-        .product-body {
-            padding: 10px;
-            text-align: center;
+        .dropdown-menu a{
+            display:block;
+            padding:10px;
+            color:#333;
+            text-decoration:none;
+            border-bottom:1px solid #eee;
         }
 
-        .price {
-            color: red;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 8px 12px;
-            background: green;
-            color: white;
-            text-decoration: none;
-            margin-top: 10px;
-        }
-
-        /* FOOTER */
-        .footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 30px;
+        .dropdown-menu a:hover{
+            background:#f2f2f2;
         }
     </style>
 </head>
+
 <body>
 
-<!-- HEADER -->
 <div class="header">
     <div class="container nav">
 
         <div><strong>Tay Nguyen Coffee</strong></div>
 
         <div class="menu">
-            <a href="index.php">Trang chu</a>
-            <a href="products.php">San pham</a>
-            <a href="about.php">Ve chung toi</a>
-           
+            <a href="index.php">Trang chủ</a>
+            <a href="products.php">Sản phẩm</a>
+            <a href="about.php">Về chúng tôi</a>
         </div>
 
         <div class="right">
 
-            <a href="cart.php">🛒</a>
+            <a href="cart.php" class="cart-icon">🛒</a>
 
-            <?php if(isset($_SESSION['user'])) { ?>
+            <?php if(isset($_SESSION['user_id'])) { ?>
 
-                <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin') { ?>
+                <div class="user-dropdown" id="userDropdown">
 
-                    <!-- ADMIN -->
-                    <a href="admin.php">⚙ <?= $_SESSION['user']; ?></a>
+                    <div class="user-toggle" onclick="toggleMenu()">
+                        <img src="<?php echo $avatar; ?>" class="nav-avatar">
+                        <span><?php echo $username; ?></span>
+                    </div>
 
-                <?php } else { ?>
+                    <div class="dropdown-menu" id="dropdownMenu">
 
-                    <!-- USER -->
-                    <a href="profile.php">👤 <?= $_SESSION['user']; ?></a>
+                        <?php if($role == 'admin') { ?>
+                            <a href="admin.php">⚙ Trang quản trị</a>
+                        <?php } ?>
 
-                <?php } ?>
+                        <a href="profile.php">👤 Tài khoản</a>
+                        <a href="profile.php">📦 Đơn hàng</a>
+                        <a href="logout.php">🚪 Đăng xuất</a>
 
-                <a href="logout.php">Đăng xuất</a>
+                    </div>
+
+                </div>
 
             <?php } else { ?>
 
@@ -161,3 +190,16 @@
 </div>
 
 <div class="container">
+
+<script>
+function toggleMenu(){
+    document.getElementById("dropdownMenu").classList.toggle("show");
+}
+
+// click ngoài → đóng
+window.onclick = function(e){
+    if(!e.target.closest('#userDropdown')){
+        document.getElementById("dropdownMenu").classList.remove("show");
+    }
+}
+</script>

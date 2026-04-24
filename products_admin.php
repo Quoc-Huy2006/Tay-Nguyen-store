@@ -70,13 +70,14 @@ $result = $conn->query($sql);
         </td>
 
         <td>
-            <a href="edit_product.php?id=<?= $row['id']; ?>">Sửa</a> |
-            
-            <a href="delete_product.php?id=<?= $row['id']; ?>"
-               onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-               Xóa
-            </a>
-        </td>
+    <a href="edit_product.php?id=<?= $row['id'] ?>">Sửa</a> |
+    <a href="delete_product.php?id=<?= $row['id'] ?>">Xóa</a> |
+    <a href="admin_reviews_product.php?id=<?= $row['id'] ?>">
+        <button style="background:#007bff;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
+            Xem đánh giá
+        </button>
+    </a>
+</td>
     </tr>
 
 <?php } ?>

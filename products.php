@@ -17,19 +17,19 @@ $result = $conn->query($sql);
 
 <style>
 .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+    display:flex;
+    flex-wrap:wrap;
     gap:20px;
-    padding:20px;
 }
 
 .product{
-    background:white;
+    width:calc(25% - 20px);
+    background:#fff;
     border-radius:10px;
-    box-shadow:0 0 10px #ccc;
     overflow:hidden;
-    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
     transition:0.3s;
+    cursor:pointer;
 }
 
 .product:hover{
@@ -38,17 +38,13 @@ $result = $conn->query($sql);
 
 .product img{
     width:100%;
-    height:220px;
+    height:180px;
     object-fit:cover;
 }
 
 .product-body{
     padding:10px;
-}
-
-.product-body h3{
-    font-size:18px;
-    margin:5px 0;
+    text-align:center;
 }
 
 .rating{
@@ -98,27 +94,19 @@ button{
         <div class="product-body">
             <h3><?php echo $row['name']; ?></h3>
 
-            <!-- sao -->
+            <!-- rating -->
+            <div class="rating">
             <?php
-$avg = isset($row['avg_rating']) ? round($row['avg_rating'], 1) : 0;
-$total = isset($row['total_reviews']) ? $row['total_reviews'] : 0;
-?>
+            $avg = round($row['avg_rating'],1);
+            $total = $row['total_reviews'];
+            $full = floor($avg);
 
-<div class="rating">
-<?php
-$avg = round($row['avg_rating'],1);
-$total = $row['total_reviews'];
-
-$full = floor($avg);
-
-for($i=1;$i<=5;$i++){
-    echo ($i <= $full) ? "⭐" : "☆";
-}
-?>
- <span style="color:#666;">
- (<?= $total ?>)
- </span>
-</div>
+            for($i=1;$i<=5;$i++){
+                echo ($i <= $full) ? "⭐" : "☆";
+            }
+            ?>
+            <span style="color:#666;">(<?= $total ?>)</span>
+            </div>
 
             <!-- giá -->
             <p class="price">
@@ -127,15 +115,19 @@ for($i=1;$i<=5;$i++){
 
             <!-- nút -->
             <div class="btn-group">
+
+                <!-- THÊM GIỎ -->
                 <button class="add"
-                    onclick="event.stopPropagation(); window.location='add_to_cart.php?id=<?php echo $row['id']; ?>'">
+                    onclick="event.stopPropagation(); window.location.href='add_to_cart.php?id=<?php echo $row['id']; ?>'">
                     Thêm giỏ
                 </button>
 
+                <!-- 🔥 MUA NGAY (ĐÃ FIX) -->
                 <button class="buy"
-                    onclick="event.stopPropagation(); window.location='buy.php?id=<?php echo $row['id']; ?>'">
+                    onclick="event.stopPropagation(); window.location='order_now.php?id=<?php echo $row['id']; ?>'">
                     Mua ngay
                 </button>
+
             </div>
         </div>
     </div>
